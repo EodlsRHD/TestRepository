@@ -1,0 +1,4 @@
+repository "workTest@Eodls@cloud"
+  path "/"
+    br "/main"
+    co "/main"

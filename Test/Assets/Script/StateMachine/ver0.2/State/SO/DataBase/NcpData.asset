@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5dbaa00e500a504aaa3e3af8eaf70f3, type: 3}
+  m_Name: NcpData
+  m_EditorClassIdentifier: 
+  _idleStateID: 0
+  _searchTag: Monster
+  _characterStates:
+  - id: 0
+    _x: 355
+    _y: 382.5
+    _width: 160
+    _height: 45
+    _isIDLE: 1
+    faceColorType: 2
+    state: {fileID: 11400000, guid: f1b20f7773a12e8409ec0c1f5fefbc54, type: 2}
+  - id: 1
+    _x: 605
+    _y: 283.5
+    _width: 160
+    _height: 45
+    _isIDLE: 0
+    faceColorType: 0
+    state: {fileID: 11400000, guid: 3a59f53d8a29a1246b1628f30f2f678e, type: 2}
+  _editorConnectionStateDatas:
+  - startID: 0
+    destinationStateIDs: 01000000
+  - startID: 1
+    destinationStateIDs: 00000000
