@@ -2,3 +2,6 @@ Library/
 .plastic/
 TextMesh Pro/
 Temp/
+
+*.conf
+*.csproj
