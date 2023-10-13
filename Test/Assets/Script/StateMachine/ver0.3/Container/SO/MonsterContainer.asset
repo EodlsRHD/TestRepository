@@ -12,30 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76e0b8fcc52bbfb43b5fd47d5d1144d6, type: 3}
   m_Name: MonsterContainer
   m_EditorClassIdentifier: 
-  _id: 3
+  _id: 5
   _idleStateID: 0
   _searchTag: Npc
   _states:
   - _id: 0
     _state: {fileID: 11400000, guid: 7939215f5ec383345a8d5b732a8468f2, type: 2}
-    _x: 362
-    _y: 408.5
+    _x: 461
+    _y: 495.1667
     _width: 160
     _height: 45
     _isIDLE: 1
     faceColorType: 1
   - _id: 1
     _state: {fileID: 11400000, guid: 140d871b172107f4080cf93111afab10, type: 2}
-    _x: 108
-    _y: 243.5
+    _x: 177
+    _y: 230.16667
     _width: 160
     _height: 45
     _isIDLE: 0
     faceColorType: 0
   - _id: 2
     _state: {fileID: 11400000, guid: 43ca37f26097a9a4e852e08069ab3819, type: 2}
-    _x: 461
-    _y: 177.5
+    _x: 570
+    _y: 170.16667
     _width: 160
     _height: 45
     _isIDLE: 0
