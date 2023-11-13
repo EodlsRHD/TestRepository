@@ -243,6 +243,8 @@
     <Compile Include="Assets\Script\MinecraftCharacterController\Block.cs" />
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_UnityEngine_UI_ColorBlock.cs" />
     <Compile Include="Assets\Script\MapGenerator\MapGenerator.cs" />
+    <Compile Include="Assets\Script\MapGenerator\Display.cs" />
+    <Compile Include="Assets\Script\MapGenerator\EndlessTerrain.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />

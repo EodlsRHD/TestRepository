@@ -59,6 +59,7 @@
     <Compile Include="Assets\Asset\JMO Assets\Cartoon FX Easy Editor\Editor\CFXEasyEditor.cs" />
     <Compile Include="Assets\Editor\TimelineEventEditor.cs" />
     <Compile Include="Assets\Asset\JMO Assets\WarFX\Editor\CFX_SpawnSystemEditor.cs" />
+    <Compile Include="Assets\Editor\MapGeneratorEditor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
