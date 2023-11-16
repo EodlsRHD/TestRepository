@@ -13,9 +13,12 @@ namespace MapGanerate
         private const TextureFormat _textureFormat = TextureFormat.RGB565;
 
         [System.Serializable]
-        public class TextureLayer
+        public class BiomeLayer
         {
             public Texture2D texture;
+
+            [Range(0, 100)]
+            public int appearanceProbability;
 
             public Color tint;
             [Range(0, 1)]
@@ -27,5 +30,7 @@ namespace MapGanerate
 
             public float textureScale;
         }
+
+        public BiomeLayer[] biomeLayers;
     }
 }

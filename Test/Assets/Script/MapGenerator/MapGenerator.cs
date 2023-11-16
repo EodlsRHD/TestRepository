@@ -337,17 +337,32 @@ namespace MapGanerate
 
     public static class BiomeGenerator
     {
-        public static void GenerateBiome(int mapWidth, int mapHeight, float[,] noiseMap, BiomeSettings biomeSettings, NoiseSettings noiseSettings, TextureSettings textureSettings, Vector2 sampleCenter)
+        public static float[,] GenerateBiome(int mapWidth, int mapHeight, float[,] noiseMap, BiomeSettings biomeSettings, NoiseSettings noiseSettings, TextureSettings textureSettings, Vector2 sampleCenter)
         {
             float[,] biomeMap = new float[mapWidth, mapHeight];
+
+            for (int i = 0; i < biomeSettings.biomeLayers.Length; i++)
+            {
+
+            }
 
             for (int y = 0; y < mapHeight; y++)
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
-                    if(biomeMap[x, y] )
+                    biomeMap[x, y] = noiseMap[x, y];
+
+                    if (noiseMap[x, y] > textureSettings.borderBetweenSeaAndLandLayerIndex_SeaSide) // under the sea
+                    {
+                        continue;
+                    }
+
+
+                    
                 }
             }
+
+            return null;
         }
     }
 

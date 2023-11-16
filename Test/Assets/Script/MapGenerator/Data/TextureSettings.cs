@@ -28,6 +28,8 @@ namespace MapGanerate
             public float textureScale;
         }
 
+        public int borderBetweenSeaAndLandLayerIndex_SeaSide = 0;
+
         public TextureLayer[] layer;
 
         private float savedminHeight;
