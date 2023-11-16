@@ -6,261 +6,276 @@ using System.Threading;
 
 namespace MapGanerate
 {
-    [System.Serializable]
-    public struct TerrainType
-    {
-        public string name;
-
-        public float height;
-
-        public Color colour;
-    }
-
-    public struct MapData
+    public struct HeightMap
     {
         public readonly float[,] noiseMap;
+        public readonly float minValue;
+        public readonly float maxValue;
 
-        public readonly Color[] colorMap;
-
-        public MapData(float[,] _noiseMap, Color[] _colorMap)
+        public HeightMap(float[,] noiseMap, float minValue, float maxValue)
         {
-            this.noiseMap = _noiseMap;
-            this.colorMap = _colorMap;
+            this.noiseMap = noiseMap;
+            this.minValue = minValue;
+            this.maxValue = maxValue;
         }
     }
 
-    public enum DrawType
+    public enum eNormalizeMode
     {
-        NoiseMap,
-        ColorMap,
-        MeshMap
+        Local,
+        Global
     }
 
-    public class MapGenerator : MonoBehaviour
+    [System.Serializable]
+    public class NoiseSettings
     {
-        private struct MapThreadInfo<T>
-        {
-            public readonly Action<T> callback;
-            public readonly T parameter;
+        public eNormalizeMode normalizeMode;
 
-            public MapThreadInfo(Action<T> _callback, T _parameter)
+        public float scale = 50;
+
+        public int octaves = 6;
+
+        [Range(0, 6)]
+        public float persistance = 0.6f;
+
+        public float lacunarity = 2f;
+
+        [Space(10f)]
+
+        public int seed;
+
+        public Vector2 offset;
+
+        public void ValidateValues()
+        {
+            scale = Mathf.Max(scale, 0.01f);
+            octaves = Mathf.Max(octaves, 1);
+            lacunarity = Mathf.Max(lacunarity, 1);
+            persistance = Mathf.Clamp01(persistance);
+        }
+    }
+
+    public class MeshData
+    {
+        private Vector3[] _vertices;
+        private Vector2[] _uvs;
+        private int[] _triangles;
+
+        private Vector3[] _bakedNormals;
+
+        private Vector3[] _outOfMeshVertices;
+        private int[] _outOfMeshTriangles;
+
+        private int _triangleIndex;
+        private int _outOfMeshTriangleIndex;
+
+        private bool _useFlasShading;
+
+        public MeshData(int numVerticesPerLine, int skipIncrement, bool useFlasShading)
+        {
+            _useFlasShading = useFlasShading;
+
+            int numMeshEdgeVertices = (numVerticesPerLine - 2) * 4 - 4;
+            int numEdgeConnectionVertices = (skipIncrement - 1) * (numVerticesPerLine - 5) / skipIncrement * 4;
+            int numMainVerticesPerLine = (numVerticesPerLine - 5) / skipIncrement + 1;
+            int numMainVerteices = numMainVerticesPerLine * numMainVerticesPerLine;
+
+            _vertices = new Vector3[numMeshEdgeVertices + numEdgeConnectionVertices + numMainVerteices];
+            _uvs = new Vector2[_vertices.Length];
+
+            int numMeshEdgeTriangles = 8 * (numVerticesPerLine - 4);
+            int numMainTriangles = (numMainVerticesPerLine - 1) * (numMainVerticesPerLine - 1) * 2;
+
+            _triangles = new int[(numMeshEdgeTriangles + numMainTriangles) * 3];
+
+            _outOfMeshVertices = new Vector3[numVerticesPerLine * 4 - 4];
+            _outOfMeshTriangles = new int[24 * (numVerticesPerLine - 2)];
+        }
+
+        public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex)
+        {
+            if (vertexIndex < 0)
             {
-                this.callback = _callback;
-                this.parameter = _parameter;
+                _outOfMeshVertices[-vertexIndex - 1] = vertexPosition;
+            }
+            else
+            {
+                _vertices[vertexIndex] = vertexPosition;
+                _uvs[vertexIndex] = uv;
             }
         }
 
-        [SerializeField]
-        private Display _display = null;
-
-        [Space(10)]
-
-        public bool autoUpdate;
-
-        [Space(10), Header("Info")]
-
-        [SerializeField]
-        public const int mapChunkSize = 241;
-
-        [SerializeField, Range(0, 6)]
-        private int editorPreviewLOD;
-
-        [SerializeField]
-        private float _mapScale = 0;
-
-        [SerializeField]
-        private int _octaves = 0;
-
-        [SerializeField, Range(0, 1)]
-        private float _persistance = 0;
-
-        [SerializeField]
-        private float _lacunarity = 0;
-
-        [SerializeField]
-        private float _heightMultiplier = 1;
-
-        [SerializeField]
-        private AnimationCurve _animationCurve = null;
-
-        [SerializeField]
-        private int _seed = 0;
-
-        [SerializeField]
-        private Vector2 _offset;
-
-        [Space(10), Header("Map Color")]
-
-        [SerializeField]
-        private DrawType _drawType;
-
-        [SerializeField]
-        private TerrainType[] _terrainTypes;
-
-        private Queue<MapThreadInfo<MapData>> _mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
-        private Queue<MapThreadInfo<MeshData>> _meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
-
-        public void Initialize()
+        public void AddTriangle(int a, int b, int c)
         {
-            _display.Initialize();
-        }
-
-        public void DrawMapInEditor()
-        {
-            MapData mapData = GenerateMapData(Vector2.zero);
-
-            switch (_drawType)
+            if (a < 0 || b < 0 || c < 0)
             {
-                case DrawType.NoiseMap:
-                    {
-                        Texture2D textute = TextureGenerator.TextureFromNoiseMap(mapData.noiseMap);
+                _outOfMeshTriangles[_outOfMeshTriangleIndex] = a;
+                _outOfMeshTriangles[_outOfMeshTriangleIndex + 1] = b;
+                _outOfMeshTriangles[_outOfMeshTriangleIndex + 2] = c;
 
-                        _display.DrawTexture(textute);
-                    }
-                    break;
+                _outOfMeshTriangleIndex += 3;
+            }
+            else
+            {
+                _triangles[_triangleIndex] = a;
+                _triangles[_triangleIndex + 1] = b;
+                _triangles[_triangleIndex + 2] = c;
 
-                case DrawType.ColorMap:
-                    {
-                        Texture2D textute = TextureGenerator.TextureFromColourMap(mapData.colorMap, mapChunkSize, mapChunkSize);
-
-                        _display.DrawTexture(textute);
-                    }
-                    break;
-
-                case DrawType.MeshMap:
-                    {
-                        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.noiseMap, _heightMultiplier, _animationCurve, editorPreviewLOD);
-                        Texture2D textute = TextureGenerator.TextureFromColourMap(mapData.colorMap, mapChunkSize, mapChunkSize);
-
-                        _display.DrawMesh(meshData, textute);
-                    }
-                    break;
+                _triangleIndex += 3;
             }
         }
 
-        public void RequestMapData(Vector2 center, Action<MapData> onCallback)
+        private Vector3[] CalculateNormals()
         {
-            ThreadStart threadStart = delegate
-            {
-                MapDataThread(center, onCallback);
-            };
+            Vector3[] vertexNormals = new Vector3[_vertices.Length];
+            int triangleCount = _triangles.Length / 3;
 
-            new Thread(threadStart).Start();
-        }
-
-        private void MapDataThread(Vector2 center, Action<MapData> onCallback)
-        {
-            MapData mapData = GenerateMapData(center);
-            lock(_mapDataThreadInfoQueue)
+            for (int i = 0; i < triangleCount; i++)
             {
-                _mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(onCallback, mapData));
+                int nromalTriangleIndex = i * 3;
+                int vertexIndexA = _triangles[nromalTriangleIndex];
+                int vertexIndexB = _triangles[nromalTriangleIndex + 1];
+                int vertexIndexC = _triangles[nromalTriangleIndex + 2];
+
+                Vector3 triangleNormal = SurfaceNormalFronIndices(vertexIndexA, vertexIndexB, vertexIndexC);
+                vertexNormals[vertexIndexA] += triangleNormal;
+                vertexNormals[vertexIndexB] += triangleNormal;
+                vertexNormals[vertexIndexC] += triangleNormal;
             }
-        }
 
-        public void RequestMeshData(MapData mapData, int lod, Action<MeshData> onCallback)
-        {
-            ThreadStart threadStart = delegate
+            int borderTriangleCount = _outOfMeshTriangles.Length / 3;
+
+            for (int i = 0; i < borderTriangleCount; i++)
             {
-                MeshDataThread(mapData, lod, onCallback);
-            };
+                int nromalTriangleIndex = i * 3;
+                int vertexIndexA = _outOfMeshTriangles[nromalTriangleIndex];
+                int vertexIndexB = _outOfMeshTriangles[nromalTriangleIndex + 1];
+                int vertexIndexC = _outOfMeshTriangles[nromalTriangleIndex + 2];
 
-            new Thread(threadStart).Start();
-        }
+                Vector3 triangleNormal = SurfaceNormalFronIndices(vertexIndexA, vertexIndexB, vertexIndexC);
 
-        private void MeshDataThread(MapData mapData, int lod, Action<MeshData> onCallback)
-        {
-            MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.noiseMap, _heightMultiplier, _animationCurve, lod);
-            lock (_meshDataThreadInfoQueue)
-            {
-                _meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(onCallback, meshData));
-            }
-        }
-
-        private void Update()
-        {
-            if(_mapDataThreadInfoQueue.Count > 0)
-            {
-                for (int i = 0; i < _mapDataThreadInfoQueue.Count; i++)
+                if (vertexIndexA >= 0)
                 {
-                    MapThreadInfo<MapData> info = _mapDataThreadInfoQueue.Dequeue();
-                    info.callback(info.parameter);
+                    vertexNormals[vertexIndexA] += triangleNormal;
                 }
-            }
-            if (_meshDataThreadInfoQueue.Count > 0)
-            {
-                for (int i = 0; i < _meshDataThreadInfoQueue.Count; i++)
+
+                if (vertexIndexB >= 0)
                 {
-                    MapThreadInfo<MeshData> info = _meshDataThreadInfoQueue.Dequeue();
-                    info.callback(info.parameter);
+                    vertexNormals[vertexIndexB] += triangleNormal;
                 }
-            }
-        }
 
-        private MapData GenerateMapData(Vector2 center)
-        {
-            float[,] noiseMap = NoiseMap.CreateNoiseMap(mapChunkSize, mapChunkSize, _seed, _mapScale, _octaves, _persistance, _lacunarity, center + _offset);
-
-            Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
-            for (int y = 0; y < mapChunkSize; y++)
-            {
-                for (int x = 0; x < mapChunkSize; x++)
+                if (vertexIndexC >= 0)
                 {
-                    for (int t = 0; t < _terrainTypes.Length; t++)
-                    {
-                        if (noiseMap[x, y] <= _terrainTypes[t].height)
-                        {
-                            colorMap[y * mapChunkSize + x] = _terrainTypes[t].colour;
-                            break;
-                        }
-                    }
+                    vertexNormals[vertexIndexC] += triangleNormal;
                 }
             }
 
-            return new MapData(noiseMap, colorMap);
+            for (int i = 0; i < vertexNormals.Length; i++)
+            {
+                vertexNormals[i].Normalize();
+            }
+
+            return vertexNormals;
         }
 
-        private void OnValidate()
+        private Vector3 SurfaceNormalFronIndices(int a, int b, int c)
         {
-            if (_lacunarity < 1)
+            Vector3 pointA = (a < 0) ? _outOfMeshVertices[-a - 1] : _vertices[a];
+            Vector3 pointB = (b < 0) ? _outOfMeshVertices[-b - 1] : _vertices[b];
+            Vector3 pointC = (c < 0) ? _outOfMeshVertices[-c - 1] : _vertices[c];
+
+            Vector3 sideAB = pointB - pointA;
+            Vector3 sideAC = pointC - pointA;
+
+            return Vector3.Cross(sideAB, sideAC).normalized;
+
+        }
+
+        public void ProcessMesh()
+        {
+            if (_useFlasShading == true)
             {
-                _lacunarity = 1;
+                FlatShading();
+            }
+            else
+            {
+                BakedNormals();
+            }
+        }
+
+        void BakedNormals()
+        {
+            _bakedNormals = CalculateNormals();
+        }
+
+        private void FlatShading()
+        {
+            Vector3[] flatShadedVertices = new Vector3[_triangles.Length];
+            Vector2[] flatShaderUvs = new Vector2[_triangles.Length];
+
+            for (int i = 0; i < _triangles.Length; i++)
+            {
+                flatShadedVertices[i] = _vertices[_triangles[i]];
+                flatShaderUvs[i] = _uvs[_triangles[i]];
+
+                _triangles[i] = i;
             }
 
-            if (_octaves < 0)
+            _vertices = flatShadedVertices;
+            _uvs = flatShaderUvs;
+        }
+
+        public Mesh CreateMesh()
+        {
+            Mesh mesh = new Mesh();
+            mesh.vertices = this._vertices;
+            mesh.uv = this._uvs;
+            mesh.triangles = this._triangles;
+
+            if (_useFlasShading == true)
             {
-                _octaves = 0;
+                mesh.RecalculateNormals();
+            }
+            else
+            {
+                mesh.normals = _bakedNormals;
             }
 
-            if(_mapScale < 0)
-            {
-                _mapScale = 0.1f;
-            }
+            return mesh;
         }
     }
 
     public static class NoiseMap
     {
-        public static float[,] CreateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
+        public static float[,] CreateNoiseMap(int mapWidth, int mapHeight, NoiseSettings noiseSettings, Vector2 sampleCenter)
         {
             float[,] noiseMap = new float[mapWidth, mapHeight];
 
-            System.Random ranSeed = new System.Random(seed);
-            Vector2[] octaveOffsets = new Vector2[octaves];
-            for (int i = 0; i < octaves; i++)
+            System.Random ranSeed = new System.Random(noiseSettings.seed);
+            Vector2[] octaveOffsets = new Vector2[noiseSettings.octaves];
+
+            float maxPossobleHeight = 0;
+            float amplitude = 1;
+            float frequancy = 1;
+
+            for (int i = 0; i < noiseSettings.octaves; i++)
             {
-                float offsetX = ranSeed.Next(-100000, 100000) + offset.x;
-                float offsetY = ranSeed.Next(-100000, 100000) + offset.y;
+                float offsetX = ranSeed.Next(-100000, 100000) + noiseSettings.offset.x + sampleCenter.x;
+                float offsetY = ranSeed.Next(-100000, 100000) - noiseSettings.offset.y - sampleCenter.y;
 
                 octaveOffsets[i] = new Vector2(offsetX, offsetY);
+
+                maxPossobleHeight += amplitude;
+                amplitude *= noiseSettings.persistance;
             }
 
-            if(scale <= 0)
+            if (noiseSettings.scale <= 0)
             {
-                scale = 0.0001f;
+                noiseSettings.scale = 0.0001f;
             }
 
-            float maxNoiseHeight = float.MinValue;
-            float minNoiseHeight = float.MaxValue;
+            float maxLocalNormalizeNoiseHeight = float.MinValue;
+            float minLocalNornalizeNoiseHeight = float.MaxValue;
 
             float halfWidth = mapWidth * 0.5f;
             float halfHeight = mapHeight * 0.5f;
@@ -269,36 +284,81 @@ namespace MapGanerate
             {
                 for (int x = 0; x < mapWidth; x++)
                 {
-                    float amplitude = 1;
-                    float frequancy = 1;
+                    amplitude = 1;
+                    frequancy = 1;
                     float noiseHeight = 0;
 
-                    for (int o = 0; o < octaves; o++)
+                    for (int o = 0; o < noiseSettings.octaves; o++)
                     {
-                        float sampleX = (x - halfWidth) / scale * frequancy + octaveOffsets[o].x;
-                        float sampleY = (y - halfHeight) / scale * frequancy + octaveOffsets[o].y;
+                        float sampleX = (x - halfWidth + octaveOffsets[o].x) / noiseSettings.scale * frequancy;
+                        float sampleY = (y - halfHeight + octaveOffsets[o].y) / noiseSettings.scale * frequancy;
 
                         float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
                         noiseHeight += perlinValue * amplitude;
 
-                        amplitude *= persistance;
-                        frequancy *= lacunarity;
+                        amplitude *= noiseSettings.persistance;
+                        frequancy *= noiseSettings.lacunarity;
                     }
 
-                    if(noiseHeight > maxNoiseHeight)
+                    if (noiseHeight > maxLocalNormalizeNoiseHeight)
                     {
-                        maxNoiseHeight = noiseHeight;
-                    }
-                    else if(noiseHeight < minNoiseHeight)
-                    {
-                        minNoiseHeight = noiseHeight;
+                        maxLocalNormalizeNoiseHeight = noiseHeight;
                     }
 
-                    noiseMap[x, y] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseHeight);
+                    if (noiseHeight < minLocalNornalizeNoiseHeight)
+                    {
+                        minLocalNornalizeNoiseHeight = noiseHeight;
+                    }
+
+                    noiseMap[x, y] = noiseHeight;
+
+                    if (noiseSettings.normalizeMode == eNormalizeMode.Global)
+                    {
+                        float normalizeHeight = (noiseMap[x, y] + 1) / (2f * maxPossobleHeight / 1.405f);
+                        noiseMap[x, y] = Mathf.Clamp(normalizeHeight, 0, int.MaxValue);
+                    }
+                }
+            }
+
+            if (noiseSettings.normalizeMode == eNormalizeMode.Local)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    for (int x = 0; x < mapWidth; x++)
+                    {
+                        noiseMap[x, y] = Mathf.InverseLerp(minLocalNornalizeNoiseHeight, maxLocalNormalizeNoiseHeight, noiseMap[x, y]);
+                    }
                 }
             }
 
             return noiseMap;
+        }
+    }
+
+    public static class BiomeGenerator
+    {
+        public static void GenerateBiome(int mapWidth, int mapHeight, float[,] noiseMap, BiomeSettings biomeSettings, NoiseSettings noiseSettings, TextureSettings textureSettings, Vector2 sampleCenter)
+        {
+            float[,] biomeMap = new float[mapWidth, mapHeight];
+
+            for (int y = 0; y < mapHeight; y++)
+            {
+                for (int x = 0; x < mapWidth; x++)
+                {
+                    if(biomeMap[x, y] )
+                }
+            }
+        }
+    }
+
+    public class MapGenerator : MonoBehaviour
+    {
+        [SerializeField]
+        private MapPerview _perview = null;
+
+        public void Initialize()
+        {
+            _perview.Initialize();
         }
     }
 
@@ -316,17 +376,17 @@ namespace MapGanerate
             return texture;
         }
 
-        public static Texture2D TextureFromNoiseMap(float[,] noiseMap)
+        public static Texture2D TextureFromNoiseMap(HeightMap heightMap)
         {
-            int mapWidht = noiseMap.GetLength(0);
-            int mapHeight = noiseMap.GetLength(1);
+            int mapWidht = heightMap.noiseMap.GetLength(0);
+            int mapHeight = heightMap.noiseMap.GetLength(1);
 
             Color[] colorMap = new Color[mapWidht * mapHeight];
             for (int y = 0; y < mapHeight; y++)
             {
                 for (int x = 0; x < mapWidht; x++)
                 {
-                    colorMap[y * mapWidht + x] = Color.Lerp(Color.black, Color.white, noiseMap[x, y]);
+                    colorMap[y * mapWidht + x] = Color.Lerp(Color.black, Color.white, Mathf.InverseLerp(heightMap.minValue, heightMap.maxValue, heightMap.noiseMap[x, y]));
                 }
             }
 
@@ -336,76 +396,130 @@ namespace MapGanerate
 
     public static class MeshGenerator
     {
-        public static MeshData GenerateTerrainMesh(float[,] noiseMap, float heightMultiplier, AnimationCurve curve, int levelOfDetail)
+        public static MeshData GenerateTerrainMesh(float[,] noiseMap, MeshSettings meshSettings, int levelOfDetail)
         {
-            AnimationCurve heightCurve = new AnimationCurve(curve.keys);
+            int skipIncrement = levelOfDetail == 0 ? 1 : levelOfDetail * 2;
+            int numVertsPerLine = meshSettings.numVertsPerLine;
 
-            int mapWidth = noiseMap.GetLength(0);
-            int mapHeight = noiseMap.GetLength(1);
-            float topLeftX = (mapWidth - 1) / -2f;
-            float topLeftZ = (mapHeight - 1) / 2f;
+            Vector2 topLeft = new Vector2(-1, 1) * meshSettings.meshWorldSize * 0.5f;
 
-            int meshSimplificationIncrement = levelOfDetail == 0 ? 1 : levelOfDetail * 2;
-            int verticesPerLine = (mapWidth - 1) / meshSimplificationIncrement + 1;
+            MeshData meshData = new MeshData(numVertsPerLine, skipIncrement, meshSettings.useFlatShading);
 
-            MeshData meshData = new MeshData(verticesPerLine, verticesPerLine);
-            int vertexIndex = 0;
+            int[,] vertexIndicesMap = new int[numVertsPerLine, numVertsPerLine];
+            int meshVertexIdnex = 0;
+            int outOfMeshVertexIndex = -1;
 
-            for (int y = 0; y < mapHeight; y += meshSimplificationIncrement)
+            for (int y = 0; y < numVertsPerLine; y ++)
             {
-                for (int x = 0; x < mapWidth; x += meshSimplificationIncrement)
+                for (int x = 0; x < numVertsPerLine; x ++)
                 {
-                    meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, heightCurve.Evaluate(noiseMap[x, y]) * heightMultiplier, topLeftZ - y);
-                    meshData.uvs[vertexIndex] = new Vector2(x / (float)mapWidth, y / (float)mapHeight);
+                    bool isOutOfMeshVertex = y == 0 || y == numVertsPerLine - 1 || x == 0 || x == numVertsPerLine - 1;
+                    bool isSkippedVertex = x > 2 && x < numVertsPerLine - 3 && y > 2 && y < numVertsPerLine - 3 && ((x - 2) % skipIncrement != 0 || (y - 2) % skipIncrement != 0);
 
-                    if (x < mapWidth - 1 && y < mapHeight - 1)
+                    if (isOutOfMeshVertex == true)
                     {
-                        meshData.AddTriangle(vertexIndex, vertexIndex + verticesPerLine + 1, vertexIndex + verticesPerLine);
-                        meshData.AddTriangle(vertexIndex + verticesPerLine + 1, vertexIndex, vertexIndex + 1);
+                        vertexIndicesMap[x, y] = outOfMeshVertexIndex;
+                        outOfMeshVertexIndex--;
                     }
-
-                    vertexIndex++;
+                    else if(isSkippedVertex == false)
+                    {
+                        vertexIndicesMap[x, y] = meshVertexIdnex;
+                        meshVertexIdnex++;
+                    }
                 }
             }
+
+            for (int y = 0; y < numVertsPerLine; y ++)
+            {
+                for (int x = 0; x < numVertsPerLine; x++)
+                {
+                    bool isSkippedVertex = x > 2 && x < numVertsPerLine - 3 && y > 2 && y < numVertsPerLine - 3 && ((x - 2) % skipIncrement != 0 || (y - 2) % skipIncrement != 0);
+
+                    if (isSkippedVertex == true)
+                    {
+                        continue;
+                    }
+
+                    bool isOutOfMeshVertex = y == 0 || y == numVertsPerLine - 1 || x == 0 || x == numVertsPerLine - 1;
+                    bool isMeshEdgeVertex = (y == 1 || y == numVertsPerLine - 2 || x == 1 || x == numVertsPerLine - 2) && !isOutOfMeshVertex;
+                    bool isMainVertex = (x - 2) % skipIncrement == 0 && (y - 2) % skipIncrement == 0 && !isOutOfMeshVertex && !isMeshEdgeVertex;
+                    bool isEdgeConnectionVertex = (y == 2 || y == numVertsPerLine - 3 || x == 2 || x == numVertsPerLine - 3) && !isOutOfMeshVertex && !isMeshEdgeVertex && !isMainVertex;
+
+                    int vertexIndex = vertexIndicesMap[x, y];
+                    float height = noiseMap[x, y];
+
+                    Vector2 percent = new Vector2(x - 1, y - 1) / (numVertsPerLine - 3);
+                    Vector2 vertexPosition2D = topLeft + new Vector2(percent.x, -percent.y) * meshSettings.meshWorldSize;
+
+                    if (isEdgeConnectionVertex == true)
+                    {
+                        bool isVerical = x == 2 || x == numVertsPerLine - 3;
+
+                        int dstToMainVertexA = ((isVerical == true) ? y - 2 : x - 2) % skipIncrement;
+                        int dstToMainVertexB = skipIncrement - dstToMainVertexA;
+                        float dstPercentFromAToB = dstToMainVertexA / (float)skipIncrement;
+
+                        float heightMainVertexA = noiseMap[(isVerical == true) ? x : x - dstToMainVertexA, (isVerical == true) ? y - dstToMainVertexA : y];
+                        float heightMainVertexB = noiseMap[(isVerical == true) ? x : x + dstToMainVertexB, (isVerical == true) ? y + dstToMainVertexB : y];
+
+                        height = heightMainVertexA * (1 - dstPercentFromAToB) + heightMainVertexB * dstPercentFromAToB;
+                    }
+
+                    meshData.AddVertex(new Vector3(vertexPosition2D.x, height, vertexPosition2D.y), percent, vertexIndex);
+
+                    bool createTriangle = x < numVertsPerLine - 1 && y < numVertsPerLine - 1 && (!isEdgeConnectionVertex || (x != 2 && y != 2));
+
+                    if(createTriangle == true)
+                    {
+                        int currentIncrement = (isMainVertex && x != numVertsPerLine - 3 && y != numVertsPerLine - 3) ? skipIncrement : 1;
+
+                        int a = vertexIndicesMap[x, y];
+                        int b = vertexIndicesMap[x + currentIncrement, y];
+                        int c = vertexIndicesMap[x, y + currentIncrement];
+                        int d = vertexIndicesMap[x + currentIncrement, y + currentIncrement];
+
+                        meshData.AddTriangle(a, d, c);
+                        meshData.AddTriangle(d, a, b);
+                    }
+                }
+            }
+
+            meshData.ProcessMesh();
 
             return meshData;
         }
     }
 
-    public class MeshData
+    public static class HeightMapGenerator
     {
-        public Vector3[] vertices;
-        public Vector2[] uvs;
-        public int[] triangles;
-
-        private int triangleIndex;
-
-        public MeshData(int mapWidth, int mapHeight)
+        public static HeightMap GenerateHeightMap(int width, int height, HeightMapSettings settings, Vector2 sampleCenter)
         {
-            vertices = new Vector3[mapWidth * mapHeight];
-            uvs = new Vector2[mapWidth * mapHeight];
-            triangles = new int[(mapWidth - 1) * (mapHeight - 1) * 6];
-        }
+            float[,] values = NoiseMap.CreateNoiseMap(width, height, settings.noiseSettings, sampleCenter);
 
-        public void AddTriangle(int a, int b, int c)
-        {
-            triangles[triangleIndex] = a;
-            triangles[triangleIndex + 1] = b;
-            triangles[triangleIndex + 2] = c;
+            AnimationCurve heigntcurveThreadSafe = new AnimationCurve(settings.heightCurve.keys);
 
-            triangleIndex += 3;
-        }
+            float minVelue = float.MaxValue;
+            float maxValue = float.MinValue;
 
-        public Mesh CreateMesh()
-        {
-            Mesh mesh = new Mesh();
-            mesh.vertices = this.vertices;
-            mesh.uv = this.uvs;
-            mesh.triangles = this.triangles;
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    values[i, j] *= heigntcurveThreadSafe.Evaluate(values[i, j]) * settings.heightMultiplier;
 
-            mesh.RecalculateNormals();
+                    if(values[i,j] > maxValue)
+                    {
+                        maxValue = values[i, j];
+                    }
 
-            return mesh;
+                    if(values[i, j] < minVelue)
+                    {
+                        minVelue = values[i, j];
+                    }
+                }
+            }
+
+            return new HeightMap(values, minVelue, maxValue);
         }
     }
 }

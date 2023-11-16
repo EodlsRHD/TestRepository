@@ -70,6 +70,7 @@
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_TMPro_TMP_Character.cs" />
     <Compile Include="Assets\Script\Starcraft\UI_ControllerBar\Minimap.cs" />
     <Compile Include="Assets\Script\Starcraft\GameManager.cs" />
+    <Compile Include="Assets\Script\MapGenerator\Data\HeightMapSettings.cs" />
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_TMPro_TMP_SpriteGlyph.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.1\Behaviour\OldState.cs" />
     <Compile Include="Assets\Asset\JMO Assets\WarFX\Demo\Assets\WFX_Demo.cs" />
@@ -113,6 +114,7 @@
     <Compile Include="Assets\Script\Starcraft\OrderManager.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.1\Behaviour\WalkState.cs" />
     <Compile Include="Assets\Script\ScreenToPointRay\ScreenPointToRay.cs" />
+    <Compile Include="Assets\Script\MapGenerator\ThreadDataRequester.cs" />
     <Compile Include="Assets\Script\Billiards\BallSpawner.cs" />
     <Compile Include="Assets\Asset\JMO Assets\WarFX\Scripts\WFX_BulletHoleDecal.cs" />
     <Compile Include="Assets\Script\Angle\Bangle.cs" />
@@ -132,6 +134,7 @@
     <Compile Include="Assets\Script\MinecraftCharacterController\GridMaker.cs" />
     <Compile Include="Assets\Script\Attacker\Me.cs" />
     <Compile Include="Assets\Script\ExtendingEditor\ExtendingEditor.cs" />
+    <Compile Include="Assets\Script\MapGenerator\Data\UpdatableData.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.2\CharacterState.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.3\State\State_Runaway.cs" />
     <Compile Include="Assets\Script\Radial Menu\Line.cs" />
@@ -164,6 +167,7 @@
     <Compile Include="Assets\Script\StateMachine\ver0.2\State\SC\StateWalk.cs" />
     <Compile Include="Assets\Asset\JMO Assets\WarFX\Demo\Assets\WFX_Demo_DeleteAfterDelay.cs" />
     <Compile Include="Assets\Script\UIAnimation\ScrollMenu.cs" />
+    <Compile Include="Assets\Script\MapGenerator\MapGenerator.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.2\State\SC\StateHello.cs" />
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_Cinemachine_CinemachineImpulseDefinition.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.2\State\SC\StateTracking.cs" />
@@ -186,8 +190,10 @@
     <Compile Include="Assets\Script\Projection\Player.cs" />
     <Compile Include="Assets\Script\PoolTest\QueuePool.cs" />
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Scenes\Scripting\ScriptingExample.cs" />
+    <Compile Include="Assets\Script\MapGenerator\Data\MeshSettings.cs" />
     <Compile Include="Assets\Script\Billiards\Hole.cs" />
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Scenes\2D\LoseSightWhenTargetsFallsOffThePlatform.cs" />
+    <Compile Include="Assets\Script\MapGenerator\TerrainGenerator.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.1\Npc.cs" />
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Scenes\2D\MouseScrollZoom2D.cs" />
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Shared\Scripts\MixingCameraBlend.cs" />
@@ -215,6 +221,7 @@
     <Compile Include="Assets\Script\StateMachine\ver0.1\Behaviour\RunawayState.cs" />
     <Compile Include="Assets\Scripts\ExpandedSimpleHarmonicOscillator.cs" />
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Scenes\Trigger volumes\GenericTrigger.cs" />
+    <Compile Include="Assets\Script\MapGenerator\MapPerview.cs" />
     <Compile Include="Assets\Script\GuidedMissile\GuidedMissile.cs" />
     <Compile Include="Assets\Script\Attacker\Bullet.cs" />
     <Compile Include="Assets\Script\AudioVisualizer\LightVisualize.cs" />
@@ -242,9 +249,9 @@
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Scenes\Anywhere Door\TagChanger.cs" />
     <Compile Include="Assets\Script\MinecraftCharacterController\Block.cs" />
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_UnityEngine_UI_ColorBlock.cs" />
-    <Compile Include="Assets\Script\MapGenerator\MapGenerator.cs" />
-    <Compile Include="Assets\Script\MapGenerator\Display.cs" />
-    <Compile Include="Assets\Script\MapGenerator\EndlessTerrain.cs" />
+    <Compile Include="Assets\Script\MapGenerator\TerrainChunk.cs" />
+    <Compile Include="Assets\Script\MapGenerator\Data\TextureSettings.cs" />
+    <Compile Include="Assets\Script\MapGenerator\Data\BiomeSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
@@ -281,6 +288,7 @@
     <None Include="Assets\Asset\AVProVideo\Licenses\Third-Party Notices.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMPro_Surface.cginc" />
     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
+    <None Include="Assets\Resources\MapGenerator\Shader\Terrain.shader" />
     <None Include="Assets\Asset\AVProVideo\Licenses\FacebookAudio360-License.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Masking.shader" />
     <None Include="Assets\Asset\Hovl Studio\Procedural fire\Shaders\FireSphere.shader" />
