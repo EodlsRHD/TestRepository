@@ -331,7 +331,14 @@ namespace MapGanerate
                 }
             }
 
-            return noiseMap;
+            return AddedVariousTerrain(noiseMap);
+        }
+
+        private static float[,] AddedVariousTerrain(float[,] noiseMap)
+        {
+
+
+            return null;
         }
     }
 
@@ -358,7 +365,6 @@ namespace MapGanerate
                     }
 
 
-                    
                 }
             }
 
