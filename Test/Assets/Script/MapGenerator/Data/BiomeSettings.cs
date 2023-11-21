@@ -5,7 +5,6 @@ using UnityEngine;
 namespace MapGanerate
 {
 
-
     [CreateAssetMenu()]
     public class BiomeSettings : UpdatableData
     {

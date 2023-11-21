@@ -163,6 +163,7 @@
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Scenes\DualTarget\MoveAimTarget.cs" />
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Scenes\Anywhere Door\PlayerLookAt.cs" />
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Shared\Scripts\ExampleHelpWindow.cs" />
+    <Compile Include="Assets\Script\MapGenerator\Data\TextureSettings.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.2\State\SO\State\StateRunawaySO.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.2\State\SC\StateWalk.cs" />
     <Compile Include="Assets\Asset\JMO Assets\WarFX\Demo\Assets\WFX_Demo_DeleteAfterDelay.cs" />
@@ -186,6 +187,7 @@
     <Compile Include="Assets\Asset\JMO Assets\WarFX\Scripts\WFX_LightFlicker.cs" />
     <Compile Include="Assets\Script\PageControll\TestPost.cs" />
     <Compile Include="Assets\Script\Starcraft\UI_ControllerBar\Infomation\UnitName.cs" />
+    <Compile Include="Assets\Script\MapGenerator\TerrainChunk.cs" />
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Shared\Scripts\PlayerMove.cs" />
     <Compile Include="Assets\Script\Projection\Player.cs" />
     <Compile Include="Assets\Script\PoolTest\QueuePool.cs" />
@@ -249,8 +251,6 @@
     <Compile Include="Assets\Samples\Cinemachine\2.8.9\Cinemachine Example Scenes\Scenes\Anywhere Door\TagChanger.cs" />
     <Compile Include="Assets\Script\MinecraftCharacterController\Block.cs" />
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_UnityEngine_UI_ColorBlock.cs" />
-    <Compile Include="Assets\Script\MapGenerator\TerrainChunk.cs" />
-    <Compile Include="Assets\Script\MapGenerator\Data\TextureSettings.cs" />
     <Compile Include="Assets\Script\MapGenerator\Data\BiomeSettings.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -338,7 +338,7 @@ namespace MapGanerate
         {
 
 
-            return null;
+            return noiseMap;
         }
     }
 
