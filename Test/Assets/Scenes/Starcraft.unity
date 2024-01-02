@@ -1078,7 +1078,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _orderManager: {fileID: 2123193507}
-  _uimanager: {fileID: 0}
+  _uimanager: {fileID: 396215861}
   _boxCollider: {fileID: 935512081}
 --- !u!1 &261792875
 GameObject:

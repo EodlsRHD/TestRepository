@@ -55,6 +55,17 @@ namespace MapGanerate
         }
     }
 
+    public class MapGenerator : MonoBehaviour
+    {
+        [SerializeField]
+        private MapPerview _perview = null;
+
+        public void Initialize()
+        {
+            _perview.Initialize();
+        }
+    }
+
     public class MeshData
     {
         private Vector3[] _vertices;
@@ -369,17 +380,6 @@ namespace MapGanerate
             }
 
             return null;
-        }
-    }
-
-    public class MapGenerator : MonoBehaviour
-    {
-        [SerializeField]
-        private MapPerview _perview = null;
-
-        public void Initialize()
-        {
-            _perview.Initialize();
         }
     }
 

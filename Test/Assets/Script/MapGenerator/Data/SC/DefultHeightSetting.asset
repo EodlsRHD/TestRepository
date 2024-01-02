@@ -20,7 +20,7 @@ MonoBehaviour:
     persistance: 0.57
     lacunarity: 2
     seed: 0
-    offset: {x: 0, y: 0}
+    offset: {x: 367.3, y: 46.7}
   heightMultiplier: 600
   heightCurve:
     serializedVersion: 2

@@ -112,6 +112,7 @@
     <Compile Include="Assets\Script\Projection\CornerSet.cs" />
     <Compile Include="Assets\Script\Particle\ParticleClass.cs" />
     <Compile Include="Assets\Script\Starcraft\OrderManager.cs" />
+    <Compile Include="Assets\Script\MapGenerator_2\NoiseMaker.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.1\Behaviour\WalkState.cs" />
     <Compile Include="Assets\Script\ScreenToPointRay\ScreenPointToRay.cs" />
     <Compile Include="Assets\Script\MapGenerator\ThreadDataRequester.cs" />
@@ -123,6 +124,7 @@
     <Compile Include="Assets\Script\StateMachine\ver0.2\State\SO\State\StateWalkSO.cs" />
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_TMPro_TMP_Style.cs" />
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_UnityEngine_TextCore_GlyphRect.cs" />
+    <Compile Include="Assets\Script\MapGenerator_2\MapMaker.cs" />
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_RenderHeads_Media_AVProVideo_MediaPlaylist.cs" />
     <Compile Include="Assets\Script\StateMachine\ver0.3\State\State_Walk.cs" />
     <Compile Include="Assets\Script\PageControll\Icon.cs" />
@@ -252,6 +254,7 @@
     <Compile Include="Assets\Script\MinecraftCharacterController\Block.cs" />
     <Compile Include="Assets\Unity.VisualScripting.Generated\VisualScripting.Core\Property Providers\PropertyProvider_UnityEngine_UI_ColorBlock.cs" />
     <Compile Include="Assets\Script\MapGenerator\Data\BiomeSettings.cs" />
+    <Compile Include="Assets\Script\MapGenerator_2\MapGenerator_2Manager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
